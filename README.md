@@ -1,4 +1,4 @@
-DungeonCrawl2
-=============
+game-networking
+===============
 
-Second iteration of game post 1GAM
+a place to play around with multiplayer networking stuff
