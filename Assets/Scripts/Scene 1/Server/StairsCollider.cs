@@ -4,19 +4,11 @@ using System.Collections;
 public class StairsCollider : MonoBehaviour
 {
 
-		public GameController controller;
-
-		// Use this for initialization
+		private GameController controller;
+	
 		void Start ()
 		{
 				controller = GameObject.FindGameObjectWithTag ("GameController").GetComponent<GameController> ();
-	
-		}
-	
-		// Update is called once per frame
-		void Update ()
-		{
-	
 		}
 
 		void OnTriggerEnter2D (Collider2D collider)

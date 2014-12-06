@@ -10,7 +10,7 @@ public class RedController : PlayerController
 		void Start ()
 		{
 				name = "red";
-				respawnPosition = new Vector3 (910.0f, 150.0f, 0);
+				respawnPosition = new Vector3 (970.0f, 180.0f, 0);
 				startDirection = new Vector2 (-1.0f, 0.0f);
 				base.Start ();
 		}

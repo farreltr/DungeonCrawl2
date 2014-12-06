@@ -11,7 +11,7 @@ public class YellowController : PlayerController
 		{
 				name = "yellow";
 				startDirection = new Vector2 (1.0f, 0.0f);
-				respawnPosition = new Vector3 (90.0f, 850.0f, 0);	
+				respawnPosition = new Vector3 (110.0f, 900.0f, 0);	
 				base.Start ();
 		}
 
