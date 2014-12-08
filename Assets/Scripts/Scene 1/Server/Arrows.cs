@@ -16,15 +16,6 @@ public class Arrows : MonoBehaviour
 				}
 		}
 
-	
-		enum Direction
-		{
-				Up = 1,
-				Down = 3,
-				Left = 2,
-				Right = 0
-		}
-
 		void Start ()
 		{
 				DontDestroyOnLoad (gameObject);
@@ -43,11 +34,16 @@ public class Arrows : MonoBehaviour
 				for (int y = 1; y < TileMap.size_y - 1; y++) {
 						Vector3 position = new Vector3 (TileMap.tileSize * 0.5f, y * TileMap.tileSize + (TileMap.tileSize * 0.5f), 0);
 						Quaternion rotation = Quaternion.Euler (0, 0, 270);
-						GameObject swordClone = (GameObject)Instantiate (sword, position, rotation);
-						swordClone.transform.tag = "Right Arrow";
-						swordClone.layer = this.gameObject.layer;
-						swordClone.name = swordClone.transform.tag;
-						swordClone.transform.parent = this.gameObject.transform;
+						GameObject go = (GameObject)Instantiate (sword, position, rotation);
+						Arrow arrow = go.GetComponent<Arrow> ();
+						arrow.transform.tag = "Right Arrow";
+						arrow.gameObject.layer = this.gameObject.layer;
+						arrow.name = arrow.transform.tag;
+						arrow.transform.parent = this.gameObject.transform;
+						arrow.SetDirection (Arrow.Direction.RIGHT);
+						arrow.SetXcoord (0);
+						arrow.SetYcoord (y);
+
 				}
 		}
 
@@ -57,11 +53,15 @@ public class Arrows : MonoBehaviour
 				for (int y = 1; y < TileMap.size_y - 1; y++) {
 						Vector3 position = new Vector3 ((TileMap.size_x - 1) * TileMap.tileSize + (TileMap.tileSize * 0.5f), y * TileMap.tileSize + (TileMap.tileSize * 0.5f), 0);
 						Quaternion rotation = Quaternion.Euler (0, 0, 90);
-						GameObject swordClone = (GameObject)Instantiate (sword, position, rotation);
-						swordClone.transform.tag = "Left Arrow";
-						swordClone.layer = this.gameObject.layer;
-						swordClone.name = swordClone.transform.tag;
-						swordClone.transform.parent = this.gameObject.transform;
+						GameObject go = (GameObject)Instantiate (sword, position, rotation);
+						Arrow arrow = go.GetComponent<Arrow> ();
+						arrow.transform.tag = "Left Arrow";
+						arrow.gameObject.layer = this.gameObject.layer;
+						arrow.name = arrow.transform.tag;
+						arrow.transform.parent = this.gameObject.transform;
+						arrow.SetDirection (Arrow.Direction.LEFT);
+						arrow.SetXcoord (TileMap.size_x - 1);
+						arrow.SetYcoord (y);
 				}
 		}
 
@@ -71,11 +71,15 @@ public class Arrows : MonoBehaviour
 				for (int x = 1; x <  TileMap.size_x - 1; x++) {
 						Vector3 position = new Vector3 (x * TileMap.tileSize + TileMap.tileSize * 0.5f, 0 * TileMap.tileSize + (TileMap.tileSize * 0.5f), 0);
 						Quaternion rotation = Quaternion.Euler (0, 0, 0);
-						GameObject swordClone = (GameObject)Instantiate (sword, position, rotation);
-						swordClone.transform.tag = "Up Arrow";
-						swordClone.layer = this.gameObject.layer;
-						swordClone.name = swordClone.transform.tag;
-						swordClone.transform.parent = this.gameObject.transform;
+						GameObject go = (GameObject)Instantiate (sword, position, rotation);
+						Arrow arrow = go.GetComponent<Arrow> ();
+						arrow.transform.tag = "Up Arrow";
+						arrow.gameObject.layer = this.gameObject.layer;
+						arrow.name = arrow.transform.tag;
+						arrow.transform.parent = this.gameObject.transform;
+						arrow.SetDirection (Arrow.Direction.UP);
+						arrow.SetXcoord (x);
+						arrow.SetYcoord (0);
 				}
 		}
 
@@ -85,11 +89,16 @@ public class Arrows : MonoBehaviour
 				for (int x = 1; x <  TileMap.size_x - 1; x++) {
 						Vector3 position = new Vector3 (x * TileMap.tileSize + TileMap.tileSize * 0.5f, (TileMap.size_y - 1) * TileMap.tileSize + (TileMap.tileSize * 0.5f), 0);
 						Quaternion rotation = Quaternion.Euler (0, 0, 180);
-						GameObject swordClone = (GameObject)Instantiate (sword, position, rotation);
-						swordClone.transform.tag = "Right Arrow";
-						swordClone.layer = this.gameObject.layer;
-						swordClone.name = swordClone.transform.tag;
-						swordClone.transform.parent = this.gameObject.transform;
+						GameObject go = (GameObject)Instantiate (sword, position, rotation);
+						Arrow arrow = go.GetComponent<Arrow> ();
+						arrow.transform.tag = "Right Arrow";
+						arrow.gameObject.layer = this.gameObject.layer;
+						arrow.name = arrow.transform.tag;
+						arrow.transform.parent = this.gameObject.transform;
+						arrow.SetDirection (Arrow.Direction.DOWN);
+						arrow.SetXcoord (x);
+						arrow.SetYcoord (TileMap.size_y - 1);
+
 				}
 		}
 

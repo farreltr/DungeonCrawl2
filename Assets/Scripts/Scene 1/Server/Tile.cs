@@ -21,6 +21,7 @@ public class Tile : MonoBehaviour
 		public bool setToDestroy = false;
 		public bool destroying = false;
 		private Vector3 destroySize = new Vector3 (0.00001f, 0.00001f, 0.00001f);
+		private bool isInPlayerHand = false;
 
 		public enum TileType
 		{
@@ -340,6 +341,15 @@ public class Tile : MonoBehaviour
 				rigidbody2D.position = Vector3.Lerp (syncStartPosition, syncEndPosition, syncTime / syncDelay);
 		}
 
+		public bool IsInPlayerHand ()
+		{
+				return isInPlayerHand;
+		}
+
+		public void SetInPlayerHand (bool isInPlayerHand)
+		{
+				this.isInPlayerHand = isInPlayerHand;
+		}
 
 	
 }

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class GameController : MonoBehaviour
 {
-		private Inventory inventory;
+		private PlayerHand playerHand;
 		private bool restart;
 		private bool gameOver;
 		private static string EMPTY_STRING = "";
@@ -19,55 +19,81 @@ public class GameController : MonoBehaviour
 		public bool isTileMoving = false;
 		public bool isCPU = false;
 		public string gameOverText = "";
+		private HandTile selectedTile;
+		private Arrow endPosition;
+		private Arrow.Direction direction = Arrow.Direction.NONE;
 
 		void Start ()
 		{
 				DontDestroyOnLoad (gameObject);
 				gameOver = false;
 				restart = false;
-				inventory = GameObject.FindObjectOfType<Inventory> ();
+				playerHand = GameObject.FindObjectOfType<PlayerHand> ();
 				BuildBoard (Mathf.FloorToInt (Time.time));
 
 		}
 	
 		void Update ()
 		{
-				Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-				RaycastHit hitInfo;
-				inventory = GameObject.FindObjectOfType<Inventory> ();
-		
-				if (TileMap.tileMap != null && TileMap.tileMap.collider.Raycast (ray, out hitInfo, Mathf.Infinity)) {
-						mousePosition = hitInfo.point;
-						currentCoordinateX = Mathf.FloorToInt (hitInfo.point.x / TileMap.tileSize);
-						currentCoordinateY = Mathf.FloorToInt (hitInfo.point.y / TileMap.tileSize);
-						string tileIdx = EMPTY_STRING;
 
-						if (isTileDropped ()) {
-								bool done = HandleTile ();		
-								if (done) {
-										PlayerManager.playerManager.LoadNextLevel ();	
-								}
-																			
-										
+				if (PlayerHand.selectedTile != null && endPosition != null) {
+						PlayerHand.selectedTile.transform.position = endPosition.transform.position;
+						direction = endPosition.GetDirection ();
+						currentCoordinateX = endPosition.GetXcoord ();
+						currentCoordinateY = endPosition.GetYcoord ();
+						selectedTile = PlayerHand.selectedTile;
+						selectedTile.GetComponent<HandTile> ().enabled = false;
+						selectedTile.transform.parent = GameObject.FindObjectOfType<Board> ().transform;
+						selectedTile.SetNotSelectedColour ();
+						bool done = HandleTile ();	
+						if (done) {
+								PlayerManager.playerManager.LoadNextLevel ();	
 						}
+						PlayerHand.selectedTile = null;
+						endPosition = null;
 				}
+//				Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
+//				RaycastHit hitInfo;
+//				playerHand = GameObject.FindObjectOfType<PlayerHand> ();
+//		
+//				if (TileMap.tileMap != null && TileMap.tileMap.collider.Raycast (ray, out hitInfo, Mathf.Infinity)) {
+//						mousePosition = hitInfo.point;
+//						currentCoordinateX = Mathf.FloorToInt (hitInfo.point.x / TileMap.tileSize);
+//						currentCoordinateY = Mathf.FloorToInt (hitInfo.point.y / TileMap.tileSize);
+//						string tileIdx = EMPTY_STRING;
+//
+//						if (isTileDropped ()) {
+//								bool done = HandleTile ();		
+//								if (done) {
+//										PlayerManager.playerManager.LoadNextLevel ();	
+//								}
+//																			
+//										
+//						}
+//				}
+		}
+
+		public void SetDestination (Arrow endPosition)
+		{
+				this.endPosition = endPosition;
 		}
 
 		private bool isTileDropped ()
 		{
-				return inventory != null && inventory.e != null && inventory.e.type == EventType.mouseUp && inventory.draggingTile;
+				return playerHand.isSelected ();
 		}
 
 		private bool HandleTile ()
 		{
+				ShiftBoardTiles ();
 				
-				TilePosition tilePosition = GetPositionFromCoordinate ();
-				if (!tilePosition.Equals (TilePosition.NONE)) {
-						InstantiateDraggedTile (tilePosition);
-						ShiftBoardTiles (tilePosition);
-						ShiftPlayers (tilePosition);	
-						return true;
-				}
+//				//TilePosition tilePosition = null;
+//				if (!tilePosition.Equals (TilePosition.NONE)) {
+//						MoveTile (tilePosition);
+//						ShiftBoardTiles (tilePosition);
+//						ShiftPlayers (tilePosition);	
+//						return true;
+//				}
 				return false;
 		
 		}
@@ -112,26 +138,27 @@ public class GameController : MonoBehaviour
 				yield return new WaitForSeconds (3);
 				HandleTile ();	
 				isCPU = false;
-				inventory.isCPU = false;
-				inventory.isCPUStarted = false;
+				//inventory.isCPU = false;
+				//inventory.isCPUStarted = false;
 				PlayerManager.playerManager.LoadNextLevel ();	
 		}
 
-		void ShiftPlayers (TilePosition tilePosition)
+		void ShiftPlayers ()
 		{
 				PlayerController[] players = GameObject.FindObjectsOfType<PlayerController> ();
+				Arrow.Direction direction = endPosition.GetComponent<Arrow> ().GetDirection ();
 				foreach (PlayerController player in players) {
-						switch (tilePosition) {
-						case TilePosition.LEFT:
+						switch (direction) {
+						case Arrow.Direction.RIGHT:
 								player.ShiftRight (currentCoordinateX, currentCoordinateY);
 								break;
-						case TilePosition.RIGHT:
+						case Arrow.Direction.LEFT:
 								player.ShiftLeft (currentCoordinateX, currentCoordinateY);
 								break;
-						case TilePosition.TOP:
+						case Arrow.Direction.DOWN:
 								player.ShiftDown (currentCoordinateX, currentCoordinateY);
 								break;
-						case TilePosition.BOTTOM:
+						case Arrow.Direction.UP:
 								player.ShiftUp (currentCoordinateX, currentCoordinateY);
 								break;
 						}
@@ -139,16 +166,16 @@ public class GameController : MonoBehaviour
 				}
 		}
 
-		private Vector2 GetNewCoordinate (TilePosition tilePosition)
+		private Vector2 GetNewCoordinate ()
 		{
-				switch (tilePosition) {
-				case TilePosition.LEFT:
+				switch (direction) {
+				case Arrow.Direction.RIGHT:
 						return new Vector2 (currentCoordinateX, currentCoordinateY - 1);
-				case TilePosition.RIGHT:
+				case Arrow.Direction.LEFT:
 						return new Vector2 (currentCoordinateX - 2, currentCoordinateY - 1);
-				case TilePosition.TOP:
+				case Arrow.Direction.DOWN:
 						return new Vector2 (currentCoordinateX - 1, currentCoordinateY - 2);
-				case TilePosition.BOTTOM:
+				case Arrow.Direction.UP:
 						return new Vector2 (currentCoordinateX - 1, currentCoordinateY);
 				default:
 						return Vector2.zero;
@@ -157,23 +184,23 @@ public class GameController : MonoBehaviour
 
 		}
 
-		private Vector3 GetPositionForNewTile (TilePosition tilePosition)
+		private Vector3 GetPositionForNewTile ()
 		{
 				Vector3 position = Vector3.zero;
-				switch (tilePosition) {
-				case TilePosition.LEFT:
+				switch (direction) {
+				case Arrow.Direction.RIGHT:
 						position.x = currentCoordinateX + 1.5f;
 						position.y = currentCoordinateY + 0.5f;
 						break;
-				case TilePosition.RIGHT: 
+				case Arrow.Direction.LEFT: 
 						position.x = currentCoordinateX - 0.5f;
 						position.y = currentCoordinateY + 0.5f;
 						break;
-				case TilePosition.TOP:
+				case Arrow.Direction.DOWN:
 						position.x = currentCoordinateX + 0.5f;
 						position.y = currentCoordinateY - 0.5f;
 						break;
-				case TilePosition.BOTTOM:
+				case Arrow.Direction.UP:
 						position.x = currentCoordinateX + 0.5f;
 						position.y = currentCoordinateY + 1.5f;
 						break;
@@ -186,16 +213,16 @@ public class GameController : MonoBehaviour
 
 		}
 
-		private Tile GetTileFromPosition (TilePosition tilePosition)
+		private Tile GetTileFromPosition ()
 		{
-				switch (tilePosition) {
-				case TilePosition.LEFT:
+				switch (direction) {
+				case Arrow.Direction.RIGHT:
 						return GetTileAtCoordinate (new Vector2 (currentCoordinateX + boardSizeX - 1, currentCoordinateY - 1));		
-				case TilePosition.RIGHT: 
+				case Arrow.Direction.LEFT: 
 						return GameObject.FindGameObjectWithTag (string.Concat (currentCoordinateX - boardSizeX - 1, currentCoordinateY - 1)).GetComponent<Tile> ();
-				case TilePosition.TOP:
+				case Arrow.Direction.DOWN:
 						return GetTileAtCoordinate (new Vector2 (currentCoordinateX - 1, currentCoordinateY + boardSizeY - 1));	
-				case TilePosition.BOTTOM:
+				case Arrow.Direction.UP:
 						return GetTileAtCoordinate (new Vector2 (currentCoordinateX - 1, currentCoordinateY - boardSizeY - 1));		
 				default:
 						return new Tile ();
@@ -203,12 +230,12 @@ public class GameController : MonoBehaviour
 				}
 		}
 	
-		private void ShiftBoardTiles (TilePosition tilePosition)
+		private void ShiftBoardTiles ()
 		{
-				switch (tilePosition) {
-				case TilePosition.LEFT:
+				switch (direction) {
+				case Arrow.Direction.RIGHT:
 						CloneAndDestroy (GetTileAtCoordinate (new Vector2 (boardSizeX, currentCoordinateY)));
-						for (int x=boardSizeX; x>-1; x--) {
+						for (int x=TileMap.size_x; x>-1; x--) {
 								Tile tile = GetTileAtCoordinate (new Vector2 (x, currentCoordinateY));
 								if (tile != null) {
 										tile.shiftRight ();
@@ -216,27 +243,27 @@ public class GameController : MonoBehaviour
 								
 						}
 						break;
-				case TilePosition.RIGHT: 
+				case Arrow.Direction.LEFT: 
 						CloneAndDestroy (GetTileAtCoordinate (new Vector2 (1, currentCoordinateY)));	
-						for (int x=1; x<boardSizeX+1; x++) {
+						for (int x=1; x<TileMap.size_x+1; x++) {
 								Tile tile = GetTileAtCoordinate (new Vector2 (x, currentCoordinateY));
 								if (tile != null) {
 										tile.shiftLeft ();
 								}
 						}
 						break;
-				case TilePosition.TOP:
+				case Arrow.Direction.DOWN:
 						CloneAndDestroy (GetTileAtCoordinate (new Vector2 (currentCoordinateX, 1)));	
-						for (int y=1; y<boardSizeY+1; y++) {
+						for (int y=1; y<TileMap.size_y+1; y++) {
 								Tile tile = GetTileAtCoordinate (new Vector2 (currentCoordinateX, y));
 								if (tile != null) {
 										tile.shiftDown ();
 								}			
 						}
 						break;								
-				case TilePosition.BOTTOM:
+				case Arrow.Direction.UP:
 						CloneAndDestroy (GetTileAtCoordinate (new Vector2 (currentCoordinateX, boardSizeY)));	
-						for (int y=boardSizeY; y>-1; y--) {	
+						for (int y=TileMap.size_y; y>-1; y--) {	
 								Tile tile = GetTileAtCoordinate (new Vector2 (currentCoordinateX, y));
 								if (tile != null) {
 										tile.shiftUp ();	
@@ -249,8 +276,13 @@ public class GameController : MonoBehaviour
 		private void CloneAndDestroy (Tile tile)
 		{
 				if (tile != null) {
-						inventory.inventory [inventory.prevIdx] = CloneObject (tile.gameObject).GetComponent<Tile> ();
-						tile.setToDestroy = true;
+						//inventory.inventory [inventory.prevIdx] = CloneObject (tile.gameObject).GetComponent<Tile> ();
+						//tile.setToDestroy = true;
+						tile.transform.position = selectedTile.GetSlotPosition ();
+						if (tile.GetComponent<HandTile> () == null) {
+								tile.gameObject.AddComponent<HandTile> ();
+						}
+						tile.GetComponent<HandTile> ().enabled = true;
 				}
 		}
 
@@ -292,36 +324,38 @@ public class GameController : MonoBehaviour
 
 		}
 		
-		void InstantiateDraggedTile (TilePosition tilePosition)
-		{
-				Vector3 position = new Vector3 (TileMap.tileSize * (0.5f + currentCoordinateX), TileMap.tileSize * (0.5f + currentCoordinateY), 0.0f);
-				if (inventory.draggedTile != null) {
-						GameObject clone = CloneObject (inventory.draggedTile.gameObject);
-						GameObject tileObject = Instantiate (clone, position, clone.transform.rotation) as GameObject;
-						tileObject.transform.parent = GameObject.FindGameObjectWithTag ("Board").transform;
-						tileObject.transform.GetComponent<SpriteRenderer> ().sortingLayerName = "Board Tile";
-						inventory.draggingTile = false;
-						Tile tile;
-						if (tileObject.GetComponent<Tile> () == null) {
-								tile = tileObject.AddComponent<Tile> ();
-								tile.SetTileType (clone.GetComponent<Tile> ().type);
-						} else {
-								tile = clone.GetComponent<Tile> ();
-						}	
-						tile.coordinate = new Vector2 (currentCoordinateX, currentCoordinateY);
-						if (tileObject.GetComponent<MoveOnStart> () == null) {
-								MoveOnStart moveOnStart = tileObject.AddComponent<MoveOnStart> ();
-								NetworkView viewMove = tileObject.AddComponent<NetworkView> ();
-								viewMove.observed = moveOnStart;
-						} 
-						tileObject.GetComponent<MoveOnStart> ().direction = GetMoveDirection (tilePosition);
-						foreach (BoxCollider2D collider in tileObject.GetComponents<BoxCollider2D>()) {
-								collider.enabled = false;
-						}
-
-				}
-
-		}
+//		void MoveTile (TilePosition tilePosition)
+//		{
+//				Vector3 position = new Vector3 (TileMap.tileSize * (0.5f + currentCoordinateX), TileMap.tileSize * (0.5f + currentCoordinateY), 0.0f);
+//				HandTile selectedTile = playerHand.getSelected ();
+//				if (selectedTile != null) {
+//						//GameObject clone = CloneObject (selectedTile.gameObject);
+//						//GameObject tileObject = Instantiate (clone, position, clone.transform.rotation) as GameObject;
+////						tileObject.transform.parent = GameObject.FindGameObjectWithTag ("Board").transform;
+////						tileObject.transform.GetComponent<SpriteRenderer> ().sortingLayerName = "Board Tile";
+////						PlayerHand.selectedTile = null;
+////						Tile tile;
+////						if (tileObject.GetComponent<Tile> () == null) {
+////								tile = tileObject.AddComponent<Tile> ();
+////								tile.SetTileType (clone.GetComponent<Tile> ().type);
+////						} else {
+////								tile = clone.GetComponent<Tile> ();
+////						}	
+//						Tile tile = selectedTile.GetComponent<Tile> ();
+//						tile.coordinate = new Vector2 (currentCoordinateX, currentCoordinateY);
+//						if (selectedTile.GetComponent<MoveOnStart> () == null) {
+////								/MoveOnStart moveOnStart = selectedTile.AddComponent<MoveOnStart> ();
+////								NetworkView viewMove = selectedTile.AddComponent<NetworkView> ();
+////								viewMove.observed = moveOnStart;
+//						} 
+//						selectedTile.GetComponent<MoveOnStart> ().direction = GetMoveDirection (tilePosition);
+//						foreach (BoxCollider2D collider in selectedTile.GetComponents<BoxCollider2D>()) {
+//								collider.enabled = false;
+//						}
+//
+//				}
+//
+//		}
 
 		public bool IsTileMoving ()
 		{
